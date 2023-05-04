@@ -108,8 +108,8 @@ docker-daemon                              accept                               
 
 ### Test your podman trust policy
 
-| :memo:        | A signed and unsigned image are available in your container image registry        |
-|---------------|:----------------------------------------------------------------------------------|
+| :memo:        | This assumes there is a signed and unsigned image are available in your container image registry        |
+|---------------|:--------------------------------------------------------------------------------------------------------|
 
 ```bash
 podman image pull quay.io/sallyom/simplewebserver:unsigned
@@ -128,7 +128,6 @@ Copying config 256ae4d00e done
 Writing manifest to image destination
 Storing signatures
 256ae4d00e3f9714a75af239fcd804293b0fd8ac59fb9fa85d34ab54fef52a5e
-
 ```
 
 ### How to sign images with podman
@@ -136,7 +135,27 @@ Storing signatures
 You should always sign and push images as part of an automated CI/CD process.
 Here is an example of how to sign with podman.
 
+#### Sign with cosign key-pair
+
 ```sh
-podman build -t quay.io/sallyom/simplewebserver:unsigned .
+podman build -t quay.io/sallyom/simplewebserver:signed .
 podman push --sign-by-sigstore-private-key ~/image-signing-keys/cosign.private --sign-by somalley@redhat.com quay.io/sallyom/simplewebserver:signed
+```
+
+#### Sign with Sigstore public good instance (keyless signing)
+
+```sh
+podman build -t quay.io/sallyom/simplewebserver:signed .
+podman push --sign-by-sigstore sigstore-params.yaml quay.io/sallyom/simplewebserver:signed
+```
+
+Contents of `sigstore-params.yaml`
+
+```yaml
+fulcio:
+  fulcioURL: "https://fulcio.sigstore.dev"
+  oidcMode: "interactive"
+  oidcIssuerURL: "https://oauth2.sigstore.dev/auth"
+  oidcClientID: "sigstore"
+rekorURL: "https://rekor.sigstore.dev"
 ```
